@@ -1,7 +1,24 @@
 package main
 
-import "fmt"
+import (
+	"main/internal/app"
+	"main/internal/config"
+	"main/internal/db"
+	"main/internal/services/subscriptions"
+)
 
 func main() {
-	fmt.Println("hello world")
+	cfg := config.GetConfig()
+	pgxPool := app.ConnectToDB(cfg)
+	defer pgxPool.Close()
+	app.InitLogger(cfg.LogLevel)
+
+	storage := db.New(pgxPool)
+	subServ := subscriptions.New(storage)
+
+	router := app.SetupRouter(subServ)
+
+	server := app.SetupServer(cfg, router)
+
+	app.StartServer(server)
 }

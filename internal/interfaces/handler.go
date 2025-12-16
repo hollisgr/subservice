@@ -1,3 +1,5 @@
 package interfaces
 
-type Handler interface{}
+type Handler interface {
+	Register()
+}
