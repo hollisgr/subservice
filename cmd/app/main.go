@@ -9,11 +9,14 @@ import (
 
 func main() {
 	cfg := config.GetConfig()
+
 	pgxPool := app.ConnectToDB(cfg)
 	defer pgxPool.Close()
-	app.InitLogger(cfg.LogLevel)
+
+	app.InitLogger(cfg.Logger.LogLevel)
 
 	storage := db.New(pgxPool)
+
 	subServ := subscriptions.New(storage)
 
 	router := app.SetupRouter(subServ)

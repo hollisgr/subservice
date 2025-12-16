@@ -22,7 +22,12 @@ type Config struct {
 		Username string `env:"PSQL_USER"`
 		Password string `env:"PSQL_PASSWORD"`
 	}
-	LogLevel string `env:"LOG_LEVEL"`
+	Logger struct {
+		LogLevel string `env:"LOG_LEVEL"`
+	}
+	CORS struct {
+		AllowOrigins []string `env:"CORS_ALLOW_ORIGINS"`
+	}
 }
 
 var instance *Config

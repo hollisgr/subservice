@@ -8,6 +8,7 @@ GOOSE := github.com/pressly/goose/v3/cmd/goose@latest
 PGX := github.com/jackc/pgx github.com/jackc/pgx/v5/pgxpool
 SWAG := github.com/swaggo/swag/cmd/swag
 GIN_SWAG := github.com/swaggo/gin-swagger github.com/swaggo/files
+CORS := github.com/gin-contrib/cors
 
 all: build run
 
@@ -30,7 +31,8 @@ get:
 		$(GOOSE) \
 		$(PGX) \
 		$(SWAG) \
-		$(GIN_SWAG) 
+		$(GIN_SWAG) \
+		$(CORS) 
 
 docker-compose-up-silent: docker-compose-stop
 	sudo docker compose -f docker-compose.yml up -d
