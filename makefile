@@ -35,16 +35,16 @@ get:
 		$(CORS) 
 
 docker-compose-up-silent: docker-compose-stop
-	sudo docker compose -f docker-compose.yml up -d
+	sudo docker compose -f docker-compose.yml --env-file=config.env up -d
 
 docker-compose-stop:
-	sudo docker compose -f docker-compose.yml stop
+	sudo docker compose -f docker-compose.yml --env-file=config.env stop
 
 docker-compose-up: docker-compose-down
-	sudo docker compose -f docker-compose.yml up
+	sudo docker compose -f docker-compose.yml --env-file=config.env up
 
 docker-compose-down:
-	sudo docker compose -f docker-compose.yml down
+	sudo docker compose -f docker-compose.yml --env-file=config.env down
 
 swag:
 	swag fmt
