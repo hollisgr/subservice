@@ -24,4 +24,6 @@ func main() {
 	server := app.SetupServer(cfg, router)
 
 	app.StartServer(server)
+
+	app.HandleQuit(server)
 }

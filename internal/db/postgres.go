@@ -8,7 +8,6 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/sirupsen/logrus"
 )
 
 type db struct {
@@ -54,8 +53,7 @@ func (d *db) Create(ctx context.Context, sub model.Subscription) (int, error) {
 	row := d.db.QueryRow(ctx, query, args)
 	err := row.Scan(&id)
 	if err != nil {
-		logrus.Error("db create sub err:", err)
-		return id, fmt.Errorf("db create sub error: %v", err)
+		return id, fmt.Errorf("db create sub query err: %v", err)
 	}
 	return id, nil
 }
@@ -82,14 +80,16 @@ func (d *db) Load(ctx context.Context, id int) (model.Subscription, error) {
 	defer rows.Close()
 
 	if err != nil {
-		return res, err
+		return res, fmt.Errorf("db load sub query error: %v", err)
 	}
 
 	res, err = pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[model.Subscription])
 
 	if err != nil {
-		logrus.Error("db load err:", err)
-		return res, err
+		if err == pgx.ErrNoRows {
+			return res, err
+		}
+		return res, fmt.Errorf("db load sub collect row error: %v", err)
 	}
 
 	return res, nil
@@ -107,8 +107,6 @@ func (d *db) LoadList(ctx context.Context, limit int, offset int) ([]model.Subsc
 			end_date
 		FROM
 			subscriptions
-		WHERE
-			id = @id
 		ORDER BY 
 			id
 		LIMIT 
@@ -124,15 +122,19 @@ func (d *db) LoadList(ctx context.Context, limit int, offset int) ([]model.Subsc
 	defer rows.Close()
 
 	if err != nil {
-		return res, err
+		return res, fmt.Errorf("db load sub list query error: %v", err)
 	}
 
 	res, err = pgx.CollectRows(rows, pgx.RowToStructByName[model.Subscription])
 
 	if err != nil {
-		logrus.Error("db load list err:", err)
-		return res, err
+		return res, fmt.Errorf("db load sub list collect error: %v", err)
 	}
+
+	if len(res) == 0 {
+		return res, pgx.ErrNoRows
+	}
+
 	return res, nil
 }
 
@@ -146,8 +148,6 @@ func (d *db) Update(ctx context.Context, sub model.Subscription) error {
 			user_id = @upd_user_id,
 			start_date = @upd_start_date,
 			end_date = @upd_end_date
-		FROM
-			subscriptions
 		WHERE
 			id = @id
 	`
@@ -162,13 +162,10 @@ func (d *db) Update(ctx context.Context, sub model.Subscription) error {
 
 	result, err := d.db.Exec(ctx, query, args)
 	if err != nil {
-		logrus.Error("db update err:", err)
-		return err
+		return fmt.Errorf("db update sub exec error: %v", err)
 	}
 
-	rowsAffected := result.RowsAffected()
-
-	if rowsAffected == 0 {
+	if result.RowsAffected() == 0 {
 		return pgx.ErrNoRows
 	}
 
@@ -188,13 +185,10 @@ func (d *db) Delete(ctx context.Context, id int) error {
 
 	result, err := d.db.Exec(ctx, query, args)
 	if err != nil {
-		logrus.Error("db delete err:", err)
-		return err
+		return fmt.Errorf("db delete sub exec error: %v", err)
 	}
 
-	rowsAffected := result.RowsAffected()
-
-	if rowsAffected == 0 {
+	if result.RowsAffected() == 0 {
 		return pgx.ErrNoRows
 	}
 

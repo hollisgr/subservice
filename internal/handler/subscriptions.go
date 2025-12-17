@@ -13,7 +13,7 @@ func (h *handler) Create(c *gin.Context) {
 	newSub := dto.CreateSubRequest{}
 	err := c.BindJSON(&newSub)
 	if err != nil {
-		sendError(c, http.StatusBadRequest, "request body required")
+		sendError(c, http.StatusBadRequest, "request body err")
 		logrus.Warn("handler create sub err:", err)
 		return
 	}
@@ -55,14 +55,21 @@ func (h *handler) LoadList(c *gin.Context) {
 	req := dto.LoadListRequest{}
 	err := c.BindJSON(&req)
 	if err != nil {
-		sendError(c, http.StatusBadRequest, "request body required")
+		sendError(c, http.StatusBadRequest, "request body err")
 		logrus.Warn("handler load sub list err:", err)
 		return
 	}
-	resp, err := h.subService.LoadList(c.Request.Context(), req.Limit, req.Offset)
+
+	if req.Limit == 0 {
+		sendError(c, http.StatusBadRequest, "The limit must be greater than zero.")
+		logrus.Warn("handler load sub list err: limit is zero or less")
+		return
+	}
+
+	resp, err := h.subService.LoadList(c.Request.Context(), int(req.Limit), int(req.Offset))
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			sendError(c, http.StatusNotFound, "sub list not found")
+			sendError(c, http.StatusNotFound, "sub list is empty")
 			return
 		}
 		sendError(c, http.StatusInternalServerError, "load sub list err")
@@ -74,14 +81,14 @@ func (h *handler) Update(c *gin.Context) {
 	req := dto.UpdateSubRequest{}
 	err := c.BindJSON(&req)
 	if err != nil {
-		sendError(c, http.StatusBadRequest, "request body required")
+		sendError(c, http.StatusBadRequest, "request body err")
 		logrus.Warn("handler update sub err:", err)
 		return
 	}
 	err = h.subService.Update(c.Request.Context(), req)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			sendError(c, http.StatusNotFound, "sub not found, or data equal")
+			sendError(c, http.StatusNotFound, "sub not found")
 			return
 		}
 		sendError(c, http.StatusInternalServerError, "update sub err")

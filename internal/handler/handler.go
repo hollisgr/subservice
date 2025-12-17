@@ -38,8 +38,8 @@ func (h *handler) Register() {
 	h.router.POST("/subscription", h.Create)
 	h.router.GET("/subscription/:id", h.Load)
 	h.router.GET("/subscription", h.LoadList)
-	h.router.PATCH("/subscription/:id", h.Update)
-	h.router.DELETE("/subscription", h.Delete)
+	h.router.PATCH("/subscription", h.Update)
+	h.router.DELETE("/subscription/:id", h.Delete)
 
 	h.router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

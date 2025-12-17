@@ -4,15 +4,15 @@ import "github.com/google/uuid"
 
 type CreateSubRequest struct {
 	ServiceName string    `json:"service_name" example:"Yandex Plus"`
-	Price       int       `json:"price" example:"400"`
+	Price       uint      `json:"price" example:"400"`
 	UserId      uuid.UUID `json:"user_id" example:"dceb1963-e152-47ff-a562-81a360627309"`
 	StartDate   string    `json:"start_date" example:"01-2025"`
 	EndDate     string    `json:"end_date,omitempty" example:"02-2025"`
 }
 
 type LoadListRequest struct {
-	Limit  int `json:"limit" example:"10"`
-	Offset int `json:"offset" example:"1"`
+	Limit  uint `json:"limit" example:"10"`
+	Offset uint `json:"offset" example:"1"`
 }
 
 type CreateSubResponce struct {
@@ -31,7 +31,7 @@ type DeleteSubResponce struct {
 type LoadSubResponce struct {
 	Id          int       `json:"id" example:"1"`
 	ServiceName string    `json:"service_name" example:"Yandex Plus"`
-	Price       int       `json:"price" example:"400"`
+	Price       uint      `json:"price" example:"400"`
 	UserId      uuid.UUID `json:"user_id" example:"dceb1963-e152-47ff-a562-81a360627309"`
 	StartDate   string    `json:"start_date" example:"01-2025"`
 	EndDate     string    `json:"end_date,omitempty" example:"02-2025"`
@@ -40,7 +40,7 @@ type LoadSubResponce struct {
 type UpdateSubRequest struct {
 	Id          int       `json:"id" example:"1"`
 	ServiceName string    `json:"service_name" example:"Yandex Minus"`
-	Price       int       `json:"price" example:"399"`
+	Price       uint      `json:"price" example:"399"`
 	UserId      uuid.UUID `json:"user_id" example:"dceb1963-e152-47ff-a562-81a360627309"`
 	StartDate   string    `json:"start_date" example:"05-2025"`
 	EndDate     string    `json:"end_date,omitempty" example:"07-2025"`
