@@ -11,4 +11,5 @@ type Subscriptions interface {
 	LoadList(ctx context.Context, limit int, offset int) ([]dto.LoadSubResponce, error)
 	Update(ctx context.Context, data dto.UpdateSubRequest) error
 	Delete(ctx context.Context, id int) error
+	Cost(ctx context.Context, data dto.CostRequest) (dto.CostResponce, error)
 }

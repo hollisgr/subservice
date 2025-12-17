@@ -13,7 +13,7 @@ func main() {
 	pgxPool := app.ConnectToDB(cfg)
 	defer pgxPool.Close()
 
-	app.InitLogger(cfg.Logger.LogLevel)
+	app.SetupLogger(cfg.Logger.LogLevel)
 
 	storage := db.New(pgxPool)
 

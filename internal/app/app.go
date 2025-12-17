@@ -34,14 +34,21 @@ func ConnectToDB(cfg *config.Config) *pgxpool.Pool {
 	return pgxPool
 }
 
-func InitLogger(level string) {
+func SetupLogger(level string) {
 	lvl, err := logrus.ParseLevel(level)
 	if err != nil {
-		log.Fatalln("logrus: cant parse config lvl")
-		return
+		log.Println("logrus: cannot parse config level:", err)
+		os.Exit(1)
 	}
 	logrus.SetLevel(lvl)
-	log.Println("Log level:", lvl)
+
+	formatter := new(logrus.TextFormatter)
+	formatter.FullTimestamp = true
+	formatter.TimestampFormat = "2006-01-02 15:04:05"
+	formatter.DisableLevelTruncation = true
+	logrus.SetFormatter(formatter)
+
+	log.Println("Log level set to:", lvl)
 }
 
 // SetupRouter configures and returns a gin.Engine instance with registered wallet handlers.

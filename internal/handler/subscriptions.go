@@ -2,6 +2,7 @@ package handler
 
 import (
 	"main/internal/dto"
+	"main/internal/services/subscriptions"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -51,6 +52,7 @@ func (h *handler) Load(c *gin.Context) {
 
 	c.JSON(http.StatusOK, resp)
 }
+
 func (h *handler) LoadList(c *gin.Context) {
 	req := dto.LoadListRequest{}
 	err := c.BindJSON(&req)
@@ -77,6 +79,7 @@ func (h *handler) LoadList(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, resp)
 }
+
 func (h *handler) Update(c *gin.Context) {
 	req := dto.UpdateSubRequest{}
 	err := c.BindJSON(&req)
@@ -99,6 +102,7 @@ func (h *handler) Update(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, resp)
 }
+
 func (h *handler) Delete(c *gin.Context) {
 	id, err := getID(c)
 	if err != nil {
@@ -118,5 +122,31 @@ func (h *handler) Delete(c *gin.Context) {
 	resp := dto.DeleteSubResponce{
 		Success: true,
 	}
+	c.JSON(http.StatusOK, resp)
+}
+
+func (h *handler) Cost(c *gin.Context) {
+	req := dto.CostRequest{}
+	err := c.BindJSON(&req)
+	if err != nil {
+		sendError(c, http.StatusBadRequest, "request body err")
+		logrus.Warn("handler cost sub err:", err)
+		return
+	}
+
+	resp, err := h.subService.Cost(c.Request.Context(), req)
+	if err != nil {
+		if err == subscriptions.ErrEndIsLess {
+			sendError(c, http.StatusBadRequest, "end date is less than start date")
+			return
+		}
+		if err == pgx.ErrNoRows {
+			sendError(c, http.StatusNotFound, "sub not found")
+			return
+		}
+		sendError(c, http.StatusInternalServerError, "cost sub err")
+		return
+	}
+
 	c.JSON(http.StatusOK, resp)
 }

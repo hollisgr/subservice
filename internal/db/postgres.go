@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"main/internal/dto"
 	"main/internal/interfaces"
 	"main/internal/model"
 
@@ -193,4 +194,51 @@ func (d *db) Delete(ctx context.Context, id int) error {
 	}
 
 	return nil
+}
+
+func (d *db) Cost(ctx context.Context, data dto.CostRequestToDB) (model.Subscription, error) {
+	res := model.Subscription{}
+	query := `
+		SELECT 
+			id,
+			service_name,
+			price,
+			user_id,
+			start_date,
+			end_date
+		FROM 
+			subscriptions
+		WHERE 
+			user_id = @user_id
+			AND 
+				service_name = @service_name
+			AND 
+				(@start_date BETWEEN start_date AND end_date 
+				OR 
+				@end_date BETWEEN start_date AND end_date)
+	`
+	args := pgx.NamedArgs{
+		"service_name": data.ServiceName,
+		"user_id":      data.UserId,
+		"start_date":   data.StartDate,
+		"end_date":     data.EndDate,
+	}
+
+	rows, err := d.db.Query(ctx, query, args)
+	defer rows.Close()
+
+	if err != nil {
+		return res, fmt.Errorf("db cost sub query error: %v", err)
+	}
+
+	res, err = pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[model.Subscription])
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return res, err
+		}
+		return res, fmt.Errorf("db cost sub collect row error: %v", err)
+	}
+
+	return res, nil
 }
