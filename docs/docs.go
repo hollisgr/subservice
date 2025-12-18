@@ -167,7 +167,7 @@ const docTemplate = `{
             }
         },
         "/subscription/cost": {
-            "get": {
+            "post": {
                 "description": "Returns a cost of subscriptions by user ID, date and service name",
                 "consumes": [
                     "application/json"

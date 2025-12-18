@@ -311,7 +311,7 @@ paths:
       tags:
       - Subscription
   /subscription/cost:
-    get:
+    post:
       consumes:
       - application/json
       description: Returns a cost of subscriptions by user ID, date and service name

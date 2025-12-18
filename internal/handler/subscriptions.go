@@ -106,13 +106,21 @@ func (h *handler) LoadList(c *gin.Context) {
 
 	offset, err := convertToInt(offsetStr)
 	if err != nil {
-		sendBadRequest(c, "params invalid value")
+		logrus.Warn("handler loadlist err: params invalid offset value")
+		sendBadRequest(c, "params invalid offset value")
 		return
 	}
 
 	limit, err := convertToInt(limitStr)
 	if err != nil {
-		sendBadRequest(c, "params invalid value")
+		logrus.Warn("handler loadlist err: params invalid limit value")
+		sendBadRequest(c, "params invalid limit value")
+		return
+	}
+
+	if limit < 0 || offset < 0 {
+		logrus.Warn("handler loadlist err: limit or offset is less than 0")
+		sendBadRequest(c, "limit or offset is less than 0")
 		return
 	}
 
@@ -218,7 +226,7 @@ func (h *handler) Delete(c *gin.Context) {
 //	@Failure		400				{object}	handler.ErrorBadRequest
 //	@Failure		404				{object}	handler.ErrorNotFound
 //	@Failure		500				{object}	handler.ErrorInternalError
-//	@Router			/subscription/cost [get]
+//	@Router			/subscription/cost [post]
 func (h *handler) Cost(c *gin.Context) {
 	req := dto.CostRequest{}
 	err := c.BindJSON(&req)
