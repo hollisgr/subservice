@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"main/internal/config"
 	"main/internal/interfaces"
+	"net/http"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"github.com/swaggo/swag/example/basic/docs"
 )
 
 type handler struct {
@@ -19,7 +19,6 @@ type handler struct {
 }
 
 func New(r *gin.Engine, s interfaces.Subscriptions) interfaces.Handler {
-	initSwagger()
 	return &handler{
 		router:     r,
 		subService: s,
@@ -27,6 +26,7 @@ func New(r *gin.Engine, s interfaces.Subscriptions) interfaces.Handler {
 }
 
 func (h *handler) Register() {
+	initSwagger()
 	cfg := config.GetConfig()
 	configCORS := cors.DefaultConfig()
 	configCORS.AllowOrigins = cfg.CORS.AllowOrigins
@@ -46,24 +46,45 @@ func (h *handler) Register() {
 
 }
 
-type RespMsgError struct {
+type ErrorBadRequest struct {
 	Success bool   `json:"success" example:"false"`
+	Status  string `json:"status" example:"bad request"`
 	Message string `json:"message" example:"error text"`
 }
 
-func initSwagger() {
-	cfg := config.GetConfig()
-	docs.SwaggerInfo.Title = "Subscription API server"
-	docs.SwaggerInfo.Description = "This is a sample CRUDL subscription server."
-	docs.SwaggerInfo.Version = "1.0"
-	docs.SwaggerInfo.Host = cfg.Listen.Addr
-	docs.SwaggerInfo.BasePath = "/"
+type ErrorInternalError struct {
+	Success bool   `json:"success" example:"false"`
+	Status  string `json:"status" example:"internal error"`
+	Message string `json:"message" example:"error text"`
 }
 
-func sendError(c *gin.Context, code int, msg string) {
-	c.AbortWithStatusJSON(code, RespMsgError{
+type ErrorNotFound struct {
+	Success bool   `json:"success" example:"false"`
+	Status  string `json:"status" example:"entity not found"`
+	Message string `json:"message" example:"error text"`
+}
+
+func sendBadRequest(c *gin.Context, msg string) {
+	c.AbortWithStatusJSON(http.StatusBadRequest, ErrorBadRequest{
 		Success: false,
 		Message: msg,
+		Status:  "bad request",
+	})
+}
+
+func sendInternalError(c *gin.Context, msg string) {
+	c.AbortWithStatusJSON(http.StatusInternalServerError, ErrorInternalError{
+		Success: false,
+		Message: msg,
+		Status:  "internal error",
+	})
+}
+
+func sendNotFound(c *gin.Context, msg string) {
+	c.AbortWithStatusJSON(http.StatusNotFound, ErrorNotFound{
+		Success: false,
+		Message: msg,
+		Status:  "entity not found",
 	})
 }
 

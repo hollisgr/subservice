@@ -3,6 +3,7 @@ package subscriptions
 import (
 	"context"
 	"errors"
+	"fmt"
 	"main/internal/dto"
 	"main/internal/interfaces"
 	"main/internal/mappers"
@@ -12,7 +13,9 @@ import (
 )
 
 var (
-	ErrEndIsLess = errors.New("end date is less than start date")
+	ErrEndIsLess      = errors.New("end date is less than start date")
+	ErrIncorrectDate  = errors.New("start or end date is incorrect")
+	ErrIncorrectValue = errors.New("incorrect value")
 )
 
 type sub struct {
@@ -26,7 +29,16 @@ func New(s interfaces.Storage) interfaces.Subscriptions {
 }
 
 func (s *sub) Create(ctx context.Context, data dto.CreateSubRequest) (int, error) {
+	id := 0
+
 	logrus.Info("sub service: create")
+
+	ok := checkDateStr(data.StartDate)
+
+	if !ok {
+		logrus.Error(ErrIncorrectDate)
+		return id, ErrIncorrectDate
+	}
 
 	// если дату окончания не дали, будем считать что дата окончания конец столетия
 
@@ -34,7 +46,19 @@ func (s *sub) Create(ctx context.Context, data dto.CreateSubRequest) (int, error
 		data.EndDate = "12-2099"
 	}
 
+	ok = checkDateStr(data.EndDate)
+
+	if !ok {
+		logrus.Error(ErrIncorrectDate)
+		return id, ErrIncorrectDate
+	}
+
 	newSub := mappers.CreateWebToModel(data)
+
+	if newSub.EndDate.Before(newSub.StartDate) {
+		logrus.Error(ErrEndIsLess)
+		return id, ErrEndIsLess
+	}
 
 	id, err := s.storage.Create(ctx, newSub)
 	if err != nil {
@@ -76,7 +100,34 @@ func (s *sub) LoadList(ctx context.Context, limit int, offset int) ([]dto.LoadSu
 
 func (s *sub) Update(ctx context.Context, data dto.UpdateSubRequest) error {
 	logrus.Info("sub service: update")
+
+	ok := checkDateStr(data.StartDate)
+
+	if !ok {
+		logrus.Error(ErrIncorrectDate)
+		return ErrIncorrectDate
+	}
+
+	// если дату окончания не дали, будем считать что дата окончания конец столетия
+
+	if data.EndDate == "" {
+		data.EndDate = "12-2099"
+	}
+
+	ok = checkDateStr(data.EndDate)
+
+	if !ok {
+		logrus.Error(ErrIncorrectDate)
+		return ErrIncorrectDate
+	}
+
 	sub := mappers.UpdateWebToModel(data)
+
+	if sub.EndDate.Before(sub.StartDate) {
+		logrus.Error(ErrEndIsLess)
+		return ErrEndIsLess
+	}
+
 	err := s.storage.Update(ctx, sub)
 	if err != nil {
 		logrus.Error(err)
@@ -102,6 +153,20 @@ func (s *sub) Cost(ctx context.Context, data dto.CostRequest) (dto.CostResponce,
 
 	start := mappers.ConvertStringToDate(data.StartDate)
 	end := mappers.ConvertStringToDate(data.EndDate)
+
+	ok := checkDateStr(data.StartDate)
+
+	if !ok {
+		logrus.Error(ErrIncorrectDate)
+		return result, ErrIncorrectDate
+	}
+
+	ok = checkDateStr(data.EndDate)
+
+	if !ok {
+		logrus.Error(ErrIncorrectDate)
+		return result, ErrIncorrectDate
+	}
 
 	// если дата окончания раньше старта, то возвращаем ошибку
 	if end.Before(start) {
@@ -148,4 +213,24 @@ func monthDiff(start, end time.Time) int {
 	totalEnd := endYear*12 + int(endMonth)
 
 	return totalEnd - totalStart
+}
+
+func checkDateStr(date string) bool {
+	var month, year int
+	n, err := fmt.Sscanf(date, "%d-%d", &month, &year)
+	if err != nil || n != 2 {
+		return false
+	}
+
+	// Захардкодил проверку на месяц и год, минимальный допустимый год 1999, максимальный 2099
+
+	if month > 12 || month <= 0 {
+		return false
+	}
+
+	if year < 1999 || year > 2099 {
+		return false
+	}
+
+	return true
 }

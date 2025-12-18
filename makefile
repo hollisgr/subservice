@@ -48,4 +48,4 @@ docker-compose-down:
 
 swag:
 	swag fmt
-	swag init -g common.go -d internal/handler,internal/model
+	swag init -g swagger.go -d internal/handler,internal/dto

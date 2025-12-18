@@ -59,10 +59,6 @@ func CostRequestToCostDB(data dto.CostRequest) dto.CostRequestToDB {
 }
 
 func ConvertStringToDate(str string) (date time.Time) {
-	minDate := "01-1999"
-	if len(str) == 0 || str <= minDate {
-		return date
-	}
 	split := strings.Split(str, "-")
 	dateStr := fmt.Sprintf("%s-%s-01", split[1], split[0])
 	date, _ = time.Parse("2006-01-02", dateStr)
